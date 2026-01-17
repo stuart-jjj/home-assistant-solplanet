@@ -1,12 +1,14 @@
 {
   "domain": "solplanet",
   "name": "Solplanet",
-  "codeowners": ["@zbigniewmotyka"],
+  "codeowners": [
+    "@calvinbui"
+  ],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/zbigniewmotyka/home-assistant-solplanet",
+  "documentation": "https://github.com/calvinbui/home-assistant-solplanet",
   "iot_class": "local_polling",
-  "issue_tracker": "https://github.com/zbigniewmotyka/home-assistant-solplanet/issues",
+  "issue_tracker": "https://github.com/calvinbui/home-assistant-solplanet/issues",
   "requirements": [],
   "version": "0.8.0-beta1"
 }
