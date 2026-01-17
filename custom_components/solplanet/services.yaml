@@ -97,7 +97,6 @@ set_meter_limit_power:
           integration: solplanet
     abs:
       name: Limit mode
-      description: 0=Phase-balanced (Sum of all phases), 1=Phase-specific (Per phase)
       required: true
       selector:
         select:
@@ -108,7 +107,6 @@ set_meter_limit_power:
               value: "1"
     limitType:
       name: Limit type
-      description: 0=(W) absolute power, 1=(%) of nominal system power
       required: true
       selector:
         select:
@@ -119,7 +117,7 @@ set_meter_limit_power:
               value: "1"
     target:
       name: Export power limit setpoint (W)
-      description: Required when Limit type is Absolute (0). Range 0 to 10000 W.
+      description: Required when Limit type is Absolute. 0 to 10000.
       required: false
       selector:
         number:
@@ -129,7 +127,7 @@ set_meter_limit_power:
           mode: box
     targetPer:
       name: Export power limit setpoint (%)
-      description: Required when Limit type is Percent (1). Range 0 to 100%.
+      description: Required when Limit type is Percent. 0 to 100.
       required: false
       selector:
         number:
@@ -139,7 +137,7 @@ set_meter_limit_power:
           mode: box
     powerDiff:
       name: Setpoint offset (W)
-      description: Offset in watts. Range -1000 to 1000 W.
+      description: -1000 to 1000
       required: true
       selector:
         number:
@@ -148,8 +146,8 @@ set_meter_limit_power:
           step: 1
           mode: box
     lostTime:
-      name: Communications loss timeout (s)
-      description: Range 1 to 60 seconds.
+      name: Communications loss timeout (seconds)
+      description: 1 to 60
       required: true
       selector:
         number:
@@ -159,7 +157,7 @@ set_meter_limit_power:
           mode: box
     lostPowerMax:
       name: Communications loss power limit (W)
-      description: Range 0 to 10000 W.
+      description: 0 to 10000
       required: true
       selector:
         number:
@@ -180,8 +178,8 @@ set_meter_limit_current:
         device:
           integration: solplanet
     maxOutCurr:
-      name: Maximum export current limit (A, per phase)
-      description: Range 0 to 3000 A.
+      name: Maximum export current limit (A)
+      description: 0 to 3000
       required: true
       selector:
         number:
@@ -190,8 +188,8 @@ set_meter_limit_current:
           step: 1
           mode: box
     maxInCurr:
-      name: Maximum import current limit (A, per phase)
-      description: Range 0 to 3000 A.
+      name: Maximum import current limit (A)
+      description: 0 to 3000
       required: true
       selector:
         number:
@@ -201,7 +199,7 @@ set_meter_limit_current:
           mode: box
     currDiff:
       name: Setpoint offset (A)
-      description: Offset in amps. Range -10 to 10 A.
+      description: -10 to 10
       required: true
       selector:
         number:
@@ -211,7 +209,7 @@ set_meter_limit_current:
           mode: box
     lostTime:
       name: Communications loss timeout (s)
-      description: Range 1 to 60 seconds.
+      description: 1 to 60
       required: true
       selector:
         number:
@@ -221,7 +219,7 @@ set_meter_limit_current:
           mode: box
     lostCurrMax:
       name: Communications loss current limit (A)
-      description: Range 0 to Maximum export current limit (A).
+      description: 0 to Maximum export current limit.
       required: true
       selector:
         number:
@@ -243,7 +241,7 @@ set_meter_zero_power:
           integration: solplanet
     lostTime:
       name: Communications loss timeout (s)
-      description: Range 1 to 60 seconds.
+      description: 1 to 60
       required: true
       selector:
         number:
