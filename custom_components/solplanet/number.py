@@ -42,6 +42,17 @@ class SolplanetNumber(SolplanetEntity, NumberEntity):
         """Initialize the number."""
         super().__init__(description=description, isn=isn, coordinator=coordinator)
 
+    @property
+    def native_max_value(self) -> float:
+        """Return max value.
+
+        Some values depend on inverter model (e.g. export / schedule power), so we scale
+        the UI range dynamically using the inverter `rate`.
+        """
+        if self.entity_description.key.endswith(("_schedule_pin", "_schedule_pout")):
+            return float(self.coordinator.get_max_inverter_rate_w())
+        return super().native_max_value
+
     async def async_set_native_value(self, value: float) -> None:
         """Set the selected value."""
         await self.entity_description.callback(value)

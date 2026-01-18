@@ -173,7 +173,11 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         if not processed:
             raise vol.Invalid(f"No valid battery coordinator found for ISNs {isns}")
 
-    async def _apply_meter_payload(target: dict, payload: dict) -> None:
+    async def _apply_meter_payload(
+        target: dict,
+        payload: dict,
+        validator: callable | None = None,
+    ) -> None:
         """Apply a meter payload to the targeted main meter device(s)."""
         meter_isns = await get_meter_isn_from_target(hass, target)
         if not meter_isns:
@@ -184,6 +188,8 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             for data in hass.data.get(DOMAIN, {}).values():
                 coordinator = data.get("coordinator")
                 if coordinator and meter_isn in coordinator.data.get(METER_IDENTIFIER, {}):
+                    if validator is not None:
+                        validator(coordinator, payload)
                     await coordinator.set_meter_power_limit(payload)
                     processed = True
                     break
@@ -219,7 +225,25 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                 raise vol.Invalid("targetPer is required when limitType=1 (Percent)")
             payload["targetPer"] = int(call.data["targetPer"])
 
-        await _apply_meter_payload(target, payload)
+        def _validate_power_limits(coordinator: object, payload: dict) -> None:
+            max_rate = 10000
+            if hasattr(coordinator, "get_max_inverter_rate_w"):
+                try:
+                    max_rate = int(coordinator.get_max_inverter_rate_w())
+                except Exception:  # noqa: BLE001
+                    max_rate = 10000
+
+            # If using absolute W targets, constrain to inverter rated power.
+            if payload.get("limitType") == 0:
+                target_w = int(payload.get("target") or 0)
+                if target_w > max_rate:
+                    raise vol.Invalid(f"target must be <= inverter rated power ({max_rate} W)")
+
+            lost_w = int(payload.get("lostPowerMax") or 0)
+            if lost_w > max_rate:
+                raise vol.Invalid(f"lostPowerMax must be <= inverter rated power ({max_rate} W)")
+
+        await _apply_meter_payload(target, payload, validator=_validate_power_limits)
 
     async def set_meter_limit_current(call: ServiceCall) -> None:
         """Configure meter current limit mode (ctrlType=1)."""
@@ -312,11 +336,13 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                 # UI selectors in services.yaml send strings; accept both and coerce to int.
                 vol.Required("abs"): vol.All(vol.Coerce(int), vol.In([0, 1])),
                 vol.Required("limitType"): vol.All(vol.Coerce(int), vol.In([0, 1])),
-                vol.Optional("target"): vol.All(vol.Coerce(int), vol.Range(min=0, max=10000)),
+                # Actual upper bound depends on inverter `rate`; validated in the handler.
+                vol.Optional("target"): vol.All(vol.Coerce(int), vol.Range(min=0, max=50000)),
                 vol.Optional("targetPer"): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
                 vol.Required("powerDiff"): vol.All(vol.Coerce(int), vol.Range(min=-1000, max=1000)),
                 vol.Required("lostTime"): vol.All(vol.Coerce(int), vol.Range(min=1, max=60)),
-                vol.Required("lostPowerMax"): vol.All(vol.Coerce(int), vol.Range(min=0, max=10000)),
+                # Actual upper bound depends on inverter `rate`; validated in the handler.
+                vol.Required("lostPowerMax"): vol.All(vol.Coerce(int), vol.Range(min=0, max=50000)),
             }
         ),
     )

@@ -51,6 +51,23 @@ class SolplanetDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=update_interval),
         )
 
+    def get_max_inverter_rate_w(self) -> int:
+        """Return the maximum inverter rated power (W) for this config entry.
+
+        This is sourced from `getdev.cgi?device=2` -> `inv[].rate`.
+        Some features (export limits, schedule power) should scale to the inverter rating
+        rather than using hard-coded defaults.
+        """
+        rates: list[int] = []
+        invs = self.data.get(INVERTER_IDENTIFIER, {}) if isinstance(self.data, dict) else {}
+        for inv_entry in invs.values():
+            info = inv_entry.get("info") if isinstance(inv_entry, dict) else None
+            rate = getattr(info, "rate", None)
+            if isinstance(rate, int) and rate > 0:
+                rates.append(rate)
+
+        return max(rates) if rates else 10000
+
     async def _async_update_data(self):
         """Fetch data from REST API.
 
