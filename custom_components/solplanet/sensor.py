@@ -373,7 +373,7 @@ def create_meter_entites_description(
         sensors: list[SolplanetSensorEntityDescription] = [
             SolplanetSensorEntityDescription(
                 key=f"{isn}_power",
-                name="Grid power",
+                name="Meter power",
                 data_field_device_type=METER_IDENTIFIER,
                 data_field_data_type="app_data",
                 data_field_path=["power"],
@@ -449,7 +449,7 @@ def create_meter_entites_description(
             ),
             SolplanetSensorEntityDescription(
                 key=f"{isn}_i_today",
-                name="E-grid supplied today",
+                name="E-grid supplied",
                 data_field_device_type=METER_IDENTIFIER,
                 data_field_data_type="app_data",
                 data_field_path=["i_today"],
@@ -460,7 +460,7 @@ def create_meter_entites_description(
             ),
             SolplanetSensorEntityDescription(
                 key=f"{isn}_o_today",
-                name="E-grid feed-in today",
+                name="E-grid feed-in",
                 data_field_device_type=METER_IDENTIFIER,
                 data_field_data_type="app_data",
                 data_field_path=["o_today"],
