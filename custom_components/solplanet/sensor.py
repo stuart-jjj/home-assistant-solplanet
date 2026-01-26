@@ -410,7 +410,7 @@ def create_meter_entites_description(
                 data_field_device_type=METER_IDENTIFIER,
                 data_field_data_type="app_data",
                 data_field_path=["up"],
-                native_unit_of_measurement=UnitOfPower.KILO_WATT,
+                native_unit_of_measurement=UnitOfPower.WATT,
                 device_class=SensorDeviceClass.POWER,
                 state_class=SensorStateClass.MEASUREMENT,
                 unique_id_suffix="up",
