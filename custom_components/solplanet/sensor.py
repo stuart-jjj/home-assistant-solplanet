@@ -453,7 +453,7 @@ def create_meter_entites_description(
                 data_field_device_type=METER_IDENTIFIER,
                 data_field_data_type="app_data",
                 data_field_path=["i_today"],
-                native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+                native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 device_class=SensorDeviceClass.ENERGY,
                 state_class=SensorStateClass.TOTAL_INCREASING,
                 unique_id_suffix="i_today",
