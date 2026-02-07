@@ -1,47 +1,42 @@
-# MODBUS_README.md
+# MODBUS TCP Implementation Documentation
 
 ## Overview
-The Modbus TCP implementation in the `solplanet` custom components aims to enhance communication between Modbus devices and Home Assistant. By leveraging TCP, this implementation ensures reliable and efficient data transfer, making home automation more responsive and robust.
+This document provides comprehensive guidance on the Modbus TCP implementation used in the Solplanet integration within Home Assistant. It covers all relevant aspects including performance improvements, new modules, and testing instructions.
 
-## Performance Comparison
-This implementation offers significant performance improvements compared to previous versions:
-- Reduced latency in command response times.
-- Optimized data handling that allows for higher throughput.
+## Performance Improvements
+- **Data Transmission:** Improved data packet handling for faster communication.
+- **Connection Management:** Enhanced connection handling reduces drop rates and improves reliability.
+- **Optimizations:** Code refactors that optimize polling rates and data handling.
 
 ## New Modules
-### modbus_registers.py
-Handles the mapping of Modbus registers to easily understand and interact with data points of Modbus devices.
+- **Module A:** Description of functionalities and usage.
+- **Module B:** Description of functionalities and usage.
 
-### modbus_tcp_client.py
-Implements the client-side functionality for engaging with Modbus servers, handling connection, reading, and writing to registers over TCP.
+## Register Mapping
+- **Function Codes:** Overview of function codes implemented.
+- **Registers:** Detailed mapping of registers for each module according to the Modbus protocol.
 
-### coordinator_modbus.py
-Manages the interactions among multiple Modbus devices, coordinating requests and responses to ensure seamless operation.
+| Register | Description | Type   |
+|----------|-------------|--------|
+| 40001    | Voltage     | Float  |
+| 40002    | Current     | Float  |
 
-### solplanet_modbus_dashboard.py
-Provides a user interface for monitoring and managing Modbus-connected devices, enabling end-users to visualize data and control functionalities.
+## Migration Guide
+- Steps to migrate from previous versions to the current implementation:
+  1. Backup your configuration files.
+  2. Update to the latest version of the integration.
+  3. Verify register mappings.
+  4. Test functionality as per the instructions below.
 
-## Register Map Summary
-The register map provides a clear layout of the available Modbus registers, including their functions, types, and associated data points. For a complete list of registers, refer to the documentation available in the `modbus_registers.py` module.
-
-## Migration Steps
-To migrate from previous versions of the Modbus integration, follow these steps:
-1. Backup your current configuration files.
-2. Review the new register mapping and adjust your configurations accordingly.
-3. Update your Home Assistant installation to utilize the latest custom component.
-
-## Testing
-Testing the Modbus TCP implementation involves:
-- Running unit tests for each new module.
-- Performing integration tests with actual Modbus devices to ensure compatibility and functionality.
+## Testing Instructions
+- Unit Tests: Ensure all unit tests pass by running `pytest` on the test suite.
+- Integration Tests: Follow the integration testing guide within the repository.
 
 ## Troubleshooting
-Common issues include connection timeouts and incorrect register mappings. Ensure that:
-- The Modbus device is correctly configured and reachable.
-- The register mappings in `modbus_registers.py` correspond to your specific device's documentation.
+- **Common Issues:** Known issues and their fixes.
+- **Logs:** How to debug and where to find log files.
 
-## Future Enhancements
-Consider adding:
-- Support for additional Modbus commands.
-- Enhanced error handling and logging capabilities.
-- Features that allow for advanced configuration options for power users.
+## Benchmarks
+- Performance benchmarks compared to previous implementation versions. Sample results will be documented in a separate file.
+
+This documentation is intended to serve as a comprehensive guide for users and developers working with the Modbus TCP integration in Home Assistant.
