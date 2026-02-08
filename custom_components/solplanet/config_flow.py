@@ -20,7 +20,19 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api_adapter import SolplanetApiAdapter
 from .client import SolplanetClient
-from .const import CONF_INTERVAL, DEFAULT_INTERVAL, DOMAIN
+from .const import (
+    CONF_INTERVAL,
+    CONF_MODBUS_PORT,
+    CONF_MODBUS_UNIT,
+    CONF_CONNECTION_METHOD,
+    CONNECTION_METHOD_API,
+    CONNECTION_METHOD_MODBUS,
+    DEFAULT_INTERVAL,
+    DEFAULT_MODBUS_PORT,
+    DEFAULT_MODBUS_UNIT,
+    DOMAIN,
+)
+from .modbus_tcp_client import ModbusTCPClient
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,6 +40,15 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_INTERVAL, default=DEFAULT_INTERVAL): int,
+        vol.Required(CONF_CONNECTION_METHOD, default=CONNECTION_METHOD_API): vol.In(
+            {CONNECTION_METHOD_API, CONNECTION_METHOD_MODBUS}
+        ),
+        vol.Optional(CONF_MODBUS_PORT, default=DEFAULT_MODBUS_PORT): vol.All(
+            int, vol.Range(min=1, max=65535)
+        ),
+        vol.Optional(CONF_MODBUS_UNIT, default=DEFAULT_MODBUS_UNIT): vol.All(
+            int, vol.Range(min=1, max=247)
+        ),
     }
 )
 
@@ -78,6 +99,33 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     }
 
 
+async def validate_modbus_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+    """Verify we can reach the inverter over Modbus/TCP."""
+
+    client = ModbusTCPClient(
+        host=data[CONF_HOST],
+        port=data.get(CONF_MODBUS_PORT, DEFAULT_MODBUS_PORT),
+        slave_id=data.get(CONF_MODBUS_UNIT, DEFAULT_MODBUS_UNIT),
+    )
+
+    try:
+        await client.read_input_registers(1358)
+    except Exception as err:  # noqa: BLE001
+        await client.close()
+        raise CannotConnect from err
+    await client.close()
+
+    unique_id = (
+        f"modbus-{data[CONF_HOST]}-{data.get(CONF_MODBUS_PORT, DEFAULT_MODBUS_PORT)}-"
+        f"{data.get(CONF_MODBUS_UNIT, DEFAULT_MODBUS_UNIT)}"
+    )
+
+    return {
+        "title": f"{data[CONF_HOST]} (Modbus)",
+        "unique_id": unique_id,
+    }
+
+
 class SolplanetConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Solplanet."""
 
@@ -124,7 +172,10 @@ class SolplanetConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                info = await validate_input(self.hass, user_input)
+                if user_input[CONF_CONNECTION_METHOD] == CONNECTION_METHOD_MODBUS:
+                    info = await validate_modbus_input(self.hass, user_input)
+                else:
+                    info = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:

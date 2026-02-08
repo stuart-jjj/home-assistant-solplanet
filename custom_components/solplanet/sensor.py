@@ -43,6 +43,8 @@ from .const import (
     BATTERY_WARNINGS_2,
     BATTERY_WARNINGS_3,
     BATTERY_WARNINGS_4,
+    CONF_CONNECTION_METHOD,
+    CONNECTION_METHOD_MODBUS,
     DONGLE_IDENTIFIER,
     DOMAIN,
     INVERTER_ERROR_CODES,
@@ -50,6 +52,7 @@ from .const import (
     INVERTER_STATUS,
     METER_IDENTIFIER,
 )
+from .modbus_sensor import async_setup_entry as modbus_sensor_entry
 from .coordinator import SolplanetDataUpdateCoordinator
 from .entity import SolplanetEntity, SolplanetEntityDescription
 
@@ -1069,6 +1072,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors for Solplanet Inverter from a config entry."""
+    if entry.data.get(CONF_CONNECTION_METHOD) == CONNECTION_METHOD_MODBUS:
+        await modbus_sensor_entry(hass, entry, async_add_entities)
+        return
+
     coordinator: SolplanetDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         "coordinator"
     ]

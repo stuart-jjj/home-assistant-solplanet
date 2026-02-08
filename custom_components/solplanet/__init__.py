@@ -16,7 +16,10 @@ from .api_adapter import SolplanetApiAdapter
 from .client import SolplanetClient
 from .const import (
     BATTERY_IDENTIFIER,
+    CONF_CONNECTION_METHOD,
     CONF_INTERVAL,
+    CONNECTION_METHOD_API,
+    CONNECTION_METHOD_MODBUS,
     DEFAULT_INTERVAL,
     DOMAIN,
     DONGLE_IDENTIFIER,
@@ -26,6 +29,8 @@ from .const import (
 )
 from .coordinator import SolplanetDataUpdateCoordinator
 from .services import async_setup_services
+from .modbus_entry import async_setup_entry as async_setup_modbus_entry
+from .modbus_entry import async_unload_entry as async_unload_modbus_entry
 
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
@@ -56,6 +61,11 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: SolplanetConfigEntry) -> bool:
     """Set up Solplanet from a config entry."""
+
+    connection_method = entry.data.get(CONF_CONNECTION_METHOD, CONNECTION_METHOD_API)
+    if connection_method == CONNECTION_METHOD_MODBUS:
+        return await async_setup_modbus_entry(hass, entry)
+
     client = SolplanetClient(entry.data[CONF_HOST], async_get_clientsession(hass))
     try:
         api = await SolplanetApiAdapter.create(client)
@@ -201,6 +211,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolplanetConfigEntry) ->
 
 async def async_unload_entry(hass: HomeAssistant, entry: SolplanetConfigEntry) -> bool:
     """Unload a config entry."""
+
+    connection_method = entry.data.get(CONF_CONNECTION_METHOD, CONNECTION_METHOD_API)
+    if connection_method == CONNECTION_METHOD_MODBUS:
+        return await async_unload_modbus_entry(hass, entry)
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
