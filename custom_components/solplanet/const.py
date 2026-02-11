@@ -11,6 +11,18 @@ DONGLE_IDENTIFIER = "dongle"
 CONF_INTERVAL = "interval"
 DEFAULT_INTERVAL = 60
 
+CONF_MODBUS_SOC_ENABLED = "modbus_soc_enabled"
+CONF_MODBUS_HOST = "modbus_host"
+CONF_MODBUS_PORT = "modbus_port"
+CONF_MODBUS_UNIT_ID = "modbus_unit_id"
+CONF_MODBUS_SOC_REGISTER = "modbus_soc_register"
+
+DEFAULT_MODBUS_SOC_ENABLED = False
+DEFAULT_MODBUS_HOST = "192.168.86.3"
+DEFAULT_MODBUS_PORT = 502
+DEFAULT_MODBUS_UNIT_ID = 3
+DEFAULT_MODBUS_SOC_REGISTER = 1621
+
 INVERTER_ERROR_CODES = {
     0: "No error",
     1: "1 - Communication Fails Between M-S",

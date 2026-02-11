@@ -14,12 +14,29 @@ from .api_adapter import SolplanetApiAdapter
 from .client import BatterySchedule, BatteryWorkMode, BatteryWorkModes, ScheduleSlot
 from .const import (
     BATTERY_IDENTIFIER,
+    CONF_MODBUS_HOST,
+    CONF_MODBUS_PORT,
+    CONF_MODBUS_SOC_ENABLED,
+    CONF_MODBUS_SOC_REGISTER,
+    CONF_MODBUS_UNIT_ID,
+    DEFAULT_MODBUS_HOST,
+    DEFAULT_MODBUS_PORT,
+    DEFAULT_MODBUS_SOC_REGISTER,
+    DEFAULT_MODBUS_UNIT_ID,
     DOMAIN,
     DONGLE_IDENTIFIER,
     INVERTER_IDENTIFIER,
     METER_IDENTIFIER,
 )
 from .modbus import DataType
+
+try:
+    from pyModbusTCP.client import ModbusClient
+
+    _MODBUS_AVAILABLE = True
+except ImportError:  # pragma: no cover - optional dependency
+    ModbusClient = None
+    _MODBUS_AVAILABLE = False
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +54,7 @@ class SolplanetDataUpdateCoordinator(DataUpdateCoordinator):
         """Create instance of solplanet coordinator."""
         self.__api = api
         self.config_entry_id = config_entry_id
+        self._config_entry = hass.config_entries.async_get_entry(config_entry_id)
 
         # Some dongles/inverters are very sensitive to concurrent requests.
         # Serialize update cycles to reduce timeouts/flapping.
@@ -202,6 +220,9 @@ class SolplanetDataUpdateCoordinator(DataUpdateCoordinator):
                 # The Modbus helper expects full holding register numbers (40001 + offset).
                 more_settings: dict | None = None
 
+                modbus_soc: int | None = None
+                modbus_soc_source = "http"
+
                 if battery_isns:
                     # getdefine.cgi is global (no sn parameter) so fetch it once
                     try:
@@ -233,9 +254,24 @@ class SolplanetDataUpdateCoordinator(DataUpdateCoordinator):
                     except Exception as err:  # noqa: BLE001
                         _LOGGER.debug("Failed reading modbus More Settings: %s", err, exc_info=True)
 
+                    modbus_soc = await self._read_modbus_soc()
+                    if modbus_soc is not None:
+                        modbus_soc_source = "modbus"
+
                     for isn in battery_isns:
                         try:
                             data = await self.__api.get_battery_data(isn)
+                            if data is not None:
+                                if modbus_soc is not None:
+                                    _LOGGER.info(
+                                        "Battery SOC overridden via ModbusTCP: %s%% (host=%s, port=%s, register=%s)",
+                                        modbus_soc,
+                                        host,
+                                        port,
+                                        register,
+                                    )
+                                    data.soc = modbus_soc
+                                data.soc_source = modbus_soc_source
                             info = await self.__api.get_battery_info(isn)
                             battery_payload[isn] = {
                                 "data": data,
@@ -621,3 +657,43 @@ class SolplanetDataUpdateCoordinator(DataUpdateCoordinator):
             raise HomeAssistantError(
                 "Battery operations are not supported with V1 protocol"
             ) from err
+
+    async def _read_modbus_soc(self) -> int | None:
+        """Read SOC from ModbusTCP when enabled; return None on failure."""
+        config = self._get_modbus_soc_config()
+        if not config.get(CONF_MODBUS_SOC_ENABLED, False):
+            return None
+
+        if not _MODBUS_AVAILABLE:
+            _LOGGER.debug("pyModbusTCP not available; skipping Modbus SOC")
+            return None
+
+        host = str(config.get(CONF_MODBUS_HOST, DEFAULT_MODBUS_HOST))
+        port = int(config.get(CONF_MODBUS_PORT, DEFAULT_MODBUS_PORT))
+        unit_id = int(config.get(CONF_MODBUS_UNIT_ID, DEFAULT_MODBUS_UNIT_ID))
+        register = int(
+            config.get(CONF_MODBUS_SOC_REGISTER, DEFAULT_MODBUS_SOC_REGISTER)
+        )
+
+        def _read() -> int | None:
+            client = ModbusClient(host=host, port=port, auto_open=True)
+            client.unit_id = unit_id
+            try:
+                regs = client.read_input_registers(register, 1)
+                return regs[0] if regs else None
+            finally:
+                client.close()
+
+        try:
+            return await self.hass.async_add_executor_job(_read)
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.debug("Failed Modbus SOC read: %s", err, exc_info=True)
+            return None
+
+    def _get_modbus_soc_config(self) -> dict:
+        if self._config_entry is None:
+            return {}
+        config = dict(self._config_entry.data)
+        if self._config_entry.options:
+            config.update(self._config_entry.options)
+        return config

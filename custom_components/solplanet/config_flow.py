@@ -20,7 +20,21 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api_adapter import SolplanetApiAdapter
 from .client import SolplanetClient
-from .const import CONF_INTERVAL, DEFAULT_INTERVAL, DOMAIN
+from .const import (
+    CONF_INTERVAL,
+    CONF_MODBUS_HOST,
+    CONF_MODBUS_PORT,
+    CONF_MODBUS_SOC_ENABLED,
+    CONF_MODBUS_SOC_REGISTER,
+    CONF_MODBUS_UNIT_ID,
+    DEFAULT_INTERVAL,
+    DEFAULT_MODBUS_HOST,
+    DEFAULT_MODBUS_PORT,
+    DEFAULT_MODBUS_SOC_ENABLED,
+    DEFAULT_MODBUS_SOC_REGISTER,
+    DEFAULT_MODBUS_UNIT_ID,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -160,6 +174,11 @@ class SolplanetOptionsFlow(OptionsFlow):
             new_data = {
                 **self._config_entry.data,
                 CONF_INTERVAL: user_input[CONF_INTERVAL],
+                CONF_MODBUS_SOC_ENABLED: user_input[CONF_MODBUS_SOC_ENABLED],
+                CONF_MODBUS_HOST: user_input[CONF_MODBUS_HOST],
+                CONF_MODBUS_PORT: user_input[CONF_MODBUS_PORT],
+                CONF_MODBUS_UNIT_ID: user_input[CONF_MODBUS_UNIT_ID],
+                CONF_MODBUS_SOC_REGISTER: user_input[CONF_MODBUS_SOC_REGISTER],
             }
             self.hass.config_entries.async_update_entry(self._config_entry, data=new_data)
             await self.hass.config_entries.async_reload(self._config_entry.entry_id)
@@ -167,9 +186,33 @@ class SolplanetOptionsFlow(OptionsFlow):
 
         # Show form with current interval value
         current_interval = self._config_entry.data.get(CONF_INTERVAL, DEFAULT_INTERVAL)
+        current_modbus_enabled = self._config_entry.data.get(
+            CONF_MODBUS_SOC_ENABLED, DEFAULT_MODBUS_SOC_ENABLED
+        )
+        current_modbus_host = self._config_entry.data.get(
+            CONF_MODBUS_HOST, DEFAULT_MODBUS_HOST
+        )
+        current_modbus_port = self._config_entry.data.get(
+            CONF_MODBUS_PORT, DEFAULT_MODBUS_PORT
+        )
+        current_modbus_unit_id = self._config_entry.data.get(
+            CONF_MODBUS_UNIT_ID, DEFAULT_MODBUS_UNIT_ID
+        )
+        current_modbus_soc_register = self._config_entry.data.get(
+            CONF_MODBUS_SOC_REGISTER, DEFAULT_MODBUS_SOC_REGISTER
+        )
         schema = vol.Schema(
             {
                 vol.Required(CONF_INTERVAL, default=current_interval): int,
+                vol.Optional(
+                    CONF_MODBUS_SOC_ENABLED, default=current_modbus_enabled
+                ): bool,
+                vol.Optional(CONF_MODBUS_HOST, default=current_modbus_host): str,
+                vol.Optional(CONF_MODBUS_PORT, default=current_modbus_port): int,
+                vol.Optional(CONF_MODBUS_UNIT_ID, default=current_modbus_unit_id): int,
+                vol.Optional(
+                    CONF_MODBUS_SOC_REGISTER, default=current_modbus_soc_register
+                ): int,
             }
         )
 

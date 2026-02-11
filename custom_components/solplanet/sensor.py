@@ -837,6 +837,9 @@ def create_battery_entites_description(
             native_unit_of_measurement=PERCENTAGE,
             device_class=SensorDeviceClass.BATTERY,
             state_class=SensorStateClass.MEASUREMENT,
+            attributes_fn=lambda data: {
+                "source": getattr(data, "soc_source", "http") if data is not None else "http"
+            },
         ),
         SolplanetSensorEntityDescription(
             key=f"{isn}_soh",
